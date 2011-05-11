@@ -56,6 +56,7 @@ void setup() {
 
 void loop() {
 	
+    // --- E
 	if(nextXB() == 'E') {
 		
 		digitalWrite(STATUS, LOW);
@@ -104,7 +105,59 @@ void loop() {
 		}
 		
 	}
-	
+    
+    
+	// --- P
+    if(nextXB() == 'P') {
+		
+		digitalWrite(STATUS, LOW);
+		
+		if(debug) Serial << "Byte is P" << endl;
+		
+		// Send out the interrupt
+		digitalWrite(interruptOutgoing, HIGH);
+		outstandingComm = true;
+		delay(50);
+		digitalWrite(interruptOutgoing, LOW);
+		
+		while(!triggerFlag) {
+			
+			// Waiting for trigger to send the data
+			if(debug) Serial << "Waiting for the trigger" << endl;
+			digitalWrite(LED, HIGH);
+			delay(50);
+			digitalWrite(LED, LOW);
+			delay(50);
+			
+			if(triggerAttemptsCount >= 100) {
+				triggerAttemptsCount = 0;
+				break;
+			}
+			
+			triggerAttemptsCount++;
+			
+		}
+		
+		if(triggerFlag) {
+			
+			// Sending the message now
+			nssMANOI.print("P");
+			
+			if(debug) Serial << "Sending the message now" << endl;
+			
+			outstandingComm = false;
+			
+			digitalWrite(LED, HIGH);
+			delay(1000);
+			digitalWrite(LED, LOW);
+			
+			triggerFlag = false;
+			
+		}
+		
+	}
+    
+    
 }
 
 void trigger() {

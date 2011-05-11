@@ -172,6 +172,8 @@ void loop() {
 	}
     
     periodicSend();
+    
+    pirBehaviour(analogRead(pir));
      
      
 	
@@ -303,32 +305,73 @@ void ldrBehaviour(int ldrL, int ldrR) {
 
 void pirBehaviour(int pirR) {
     
-    if(pirR >= 550) {
+    if(pirR >= 500) {
+        
+        sendPToComm();
         
         if(pirCount % 5 == 0) {
-            //openMouth();
-            digitalWrite(2, HIGH);
             openMouth();
-            delay(500);
-            digitalWrite(2, LOW);
             delay(1500);
             closeMouth();
             delay(100);
         } else {
             
+            for(int i=0; i<6; i++) {
             moveLeftWing(alternate);
             moveRightWing(!alternate);
             alternate = !alternate;
-            delay(800);
+            delay(80);
+            }
+            
         }
-        
+    
         pirCount++;
         
-    } else {
+    }/* else {
         pirCount = 1; 
     }
-    
+    */
     //Serial << "PIR Count: " << pirCount << endl;
+    
+}
+
+void sendPToComm() {
+    
+    digitalWrite(interruptOutgoing, HIGH);
+    
+    while(!triggerFlag) {
+        // Waiting for trigger to send the data
+        if(debug) Serial << "Waiting for the trigger" << endl;
+        //digitalWrite(LED, HIGH);
+        delay(50);
+        //digitalWrite(LED, LOW);
+        delay(50);
+        // TODO: Make it give up at some point
+        
+        if(triggerAttemptCount >= 100) {
+            triggerAttemptCount = 0;
+            break;
+        }
+        
+        triggerAttemptCount++;
+        
+    }
+    
+    // Ready to send data
+    if(triggerFlag) {
+        
+        if(debug) Serial << "Going to send the message now" << endl;
+        
+        Serial << "P*";
+        
+        //digitalWrite(LED, HIGH);
+        delay(1000);
+        //digitalWrite(LED, LOW);
+        
+    }
+    
+    digitalWrite(interruptOutgoing, LOW);
+    triggerFlag = false;
     
 }
 

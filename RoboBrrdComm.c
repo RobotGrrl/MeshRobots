@@ -248,6 +248,12 @@ byte nextXB() {
 				delay(1000);
 				
 			}
+            
+            // --- P
+            if(msg[0] == 'P') {
+                // Send the P to MANOI via XBee
+                Serial << "P";
+            }
 			
 			digitalWrite(LED, LOW);
 			triggerFlag = false;
@@ -274,8 +280,8 @@ byte nextXB() {
         // Do something in the meantime
         // * * * * * * * * * * * * * *
         
-        /*
-         
+        if(millis()%2000 == 0) {
+
          LR = int(random(0, 256));
          LG = int(random(0, 256));
          LB = int(random(0, 256));
@@ -289,8 +295,8 @@ byte nextXB() {
          LR, LG, LB,
          1 );
          
-         Serial << "From: " << preLR << "," << preLG << "," << preLB << "!" << endl;
-         Serial << "To: " << LR << "," << LG << "," << LB << "!" << endl;
+         //Serial << "From: " << preLR << "," << preLG << "," << preLB << "!" << endl;
+         //Serial << "To: " << LR << "," << LG << "," << LB << "!" << endl;
          
          preLR = LR;
          preLG = LG;
@@ -298,10 +304,8 @@ byte nextXB() {
          preRR = RR;
          preRG = RG;
          preRB = RB;
-         
-         delay(500);
-         
-         */
+            
+        }
         
 	}
 }

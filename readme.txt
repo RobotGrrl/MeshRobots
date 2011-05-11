@@ -15,6 +15,15 @@ Diagram:
                              | 1 (XB RX)   |
                              ---------------
 
+A good process to follow when you want to see if everything works is by seeing if the following works:
+1) XBee to Comm. board data being sent and received
+2) Comm. board triggers TX interrupt
+3) Main board receives RX interrupt
+4) Main board triggers TX interrupt
+5) Comm board receives RX interrupt
+6) Main board sends data to Comm board
+7) Comm board sends data to Main board
+
 Eventually I'll make a template cookie cutter version that you all can easily adapt to your robots.
 
 Enjoy! :)

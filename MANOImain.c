@@ -228,7 +228,10 @@ void loop() {
 	while(!triggerFlag) {
 		if(debug) Serial << "Trigger flag is false..." << endl;
 		digitalWrite(STATUS, !digitalRead(STATUS));
-		updateLights();
+		
+        if(millis()%500 == 0) {
+            updateLights();
+        }
 		
 		// Send some data to the communication board
 		if(second()%30 == 0 || second()%60 == 0) {
@@ -290,9 +293,11 @@ void loop() {
 		// Send the flag to receive the message
 		digitalWrite(interruptOutgoing, HIGH);
 		delay(10);
+        
+        byte y = nextByte();
 		
 		// Check if it's getting the message
-		if(nextByte() == 'E') {
+		if(y == 'E') {
 			// Show that we received the message
 			
 			if(debug) Serial << "Received the message" << endl;
@@ -300,6 +305,13 @@ void loop() {
 			leftHandShake(1);
 			
 		}
+        
+        // --- P
+        if(y == 'P') {
+            if(debug) Serial << "Received a P!";
+            bothArmJingle(1);
+            ssc.setFrame(homeFrame, 100, 100);
+        }
 		
 		delay(50);
 		digitalWrite(LED, LOW);
