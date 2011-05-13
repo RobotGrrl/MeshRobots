@@ -35,7 +35,7 @@ char msg[141];
 
 // Initialize
 void setup() {
-
+    
 	if(debug) Serial << "MANOI Comm. beginning initialization" << endl;
 	
 	// Communication
@@ -56,8 +56,10 @@ void setup() {
 
 void loop() {
 	
+    byte msgXB = nextXB();
+    
     // --- E
-	if(nextXB() == 'E') {
+	if(msgXB == 'E') {
 		
 		digitalWrite(STATUS, LOW);
 		
@@ -106,57 +108,75 @@ void loop() {
 		
 	}
     
+    if(msgXB == 'P') {
+        relayMessage('P');
+    }
     
+    if(msgXB == 'L') {
+        relayMessage('L');
+    }
+    
+    if(msgXB == 'R') {
+        relayMessage('R');
+    }
+    
+    /*
+    byte c = 'P';
 	// --- P
-    if(nextXB() == 'P') {
-		
-		digitalWrite(STATUS, LOW);
-		
-		if(debug) Serial << "Byte is P" << endl;
-		
-		// Send out the interrupt
-		digitalWrite(interruptOutgoing, HIGH);
-		outstandingComm = true;
-		delay(50);
-		digitalWrite(interruptOutgoing, LOW);
-		
-		while(!triggerFlag) {
-			
-			// Waiting for trigger to send the data
-			if(debug) Serial << "Waiting for the trigger" << endl;
-			digitalWrite(LED, HIGH);
-			delay(50);
-			digitalWrite(LED, LOW);
-			delay(50);
-			
-			if(triggerAttemptsCount >= 100) {
-				triggerAttemptsCount = 0;
-				break;
-			}
-			
-			triggerAttemptsCount++;
-			
-		}
-		
-		if(triggerFlag) {
-			
-			// Sending the message now
-			nssMANOI.print("P");
-			
-			if(debug) Serial << "Sending the message now" << endl;
-			
-			outstandingComm = false;
-			
-			digitalWrite(LED, HIGH);
-			delay(1000);
-			digitalWrite(LED, LOW);
-			
-			triggerFlag = false;
-			
-		}
-		
+    if(msgXB == 'P' || msgXB == 'L' || msgXB == 'R') {
+        relayMessage(c);
 	}
+     */
+     
     
+}
+
+void relayMessage(byte c) {
+    
+    digitalWrite(STATUS, LOW);
+    
+    if(debug) Serial << "Byte is P" << endl;
+    
+    // Send out the interrupt
+    digitalWrite(interruptOutgoing, HIGH);
+    outstandingComm = true;
+    delay(50);
+    digitalWrite(interruptOutgoing, LOW);
+    
+    while(!triggerFlag) {
+        
+        // Waiting for trigger to send the data
+        if(debug) Serial << "Waiting for the trigger" << endl;
+        digitalWrite(LED, HIGH);
+        delay(50);
+        digitalWrite(LED, LOW);
+        delay(50);
+        
+        if(triggerAttemptsCount >= 100) {
+            triggerAttemptsCount = 0;
+            break;
+        }
+        
+        triggerAttemptsCount++;
+        
+    }
+    
+    if(triggerFlag) {
+        
+        // Sending the message now
+        nssMANOI.print(c);
+        
+        if(debug) Serial << "Sending the message now" << endl;
+        
+        outstandingComm = false;
+        
+        digitalWrite(LED, HIGH);
+        delay(1000);
+        digitalWrite(LED, LOW);
+        
+        triggerFlag = false;
+        
+    }
     
 }
 
@@ -222,16 +242,16 @@ byte nextXB() {
 		
 		/*
 		 For some reaon this doesn't work on the 3.3V Arduino Pro Mini 168
-		if(millis()%50 == 0) {
-			digitalWrite(STATUS, !digitalRead(STATUS));
-		}
+         if(millis()%50 == 0) {
+         digitalWrite(STATUS, !digitalRead(STATUS));
+         }
 		 */
 		
 		if(millis()%50 == 0) {
 			digitalWrite(STATUS, !digitalRead(STATUS));
 			delay(5);
 		}
-			
+        
 	}
 }
 

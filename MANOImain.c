@@ -155,7 +155,7 @@ volatile boolean triggerFlag = false;
 
 // Initialize
 void setup() {
-
+    
 	// Communication
 	Serial1.begin(9600);
 	
@@ -224,7 +224,7 @@ void setup() {
 }
 
 void loop() {
-
+    
 	while(!triggerFlag) {
 		if(debug) Serial << "Trigger flag is false..." << endl;
 		digitalWrite(STATUS, !digitalRead(STATUS));
@@ -306,12 +306,32 @@ void loop() {
 			
 		}
         
+        // --- Any
+        if(y == 'P' || y == 'L' || y == 'R') {
+            updateLights();
+        }
+        
         // --- P
         if(y == 'P') {
             if(debug) Serial << "Received a P!";
             bothArmJingle(1);
             ssc.setFrame(homeFrame, 100, 100);
         }
+        
+        // --- L
+        if(y == 'L') {
+            if(debug) Serial << "Received a L!";
+            leftHandShake(1);
+            ssc.setFrame(homeFrame, 100, 100);
+        }
+		
+        // --- R
+        if(y == 'R') {
+            if(debug) Serial << "Received a L!";
+            rightHandShake(1);
+            ssc.setFrame(homeFrame, 100, 100);
+        }
+        
 		
 		delay(50);
 		digitalWrite(LED, LOW);

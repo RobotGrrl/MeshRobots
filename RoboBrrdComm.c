@@ -59,7 +59,7 @@
 #include <Time.h>
 #include <NewSoftSerial.h>
 #include <Streaming.h>
-#include "Tlc5940.h"
+//#include "Tlc5940.h"
 
 boolean debug = false;
 
@@ -117,7 +117,7 @@ void setup() {
 	/* Call Tlc.init() to setup the tlc.
      You can optionally pass an initial PWM value (0 - 4095) for all channels.*/
     pinMode(spkr, OUTPUT);
-    Tlc.init(0);
+    //Tlc.init(0);
     
     // Outputs
 	pinMode(LED, OUTPUT);
@@ -251,8 +251,17 @@ byte nextXB() {
             
             // --- P
             if(msg[0] == 'P') {
-                // Send the P to MANOI via XBee
                 Serial << "P";
+            }
+            
+            // --- L
+            if(msg[0] == 'L') {
+                Serial << "L";
+            }
+            
+            // --- R
+            if(msg[0] == 'R') {
+                Serial << "R";
             }
 			
 			digitalWrite(LED, LOW);
@@ -279,8 +288,9 @@ byte nextXB() {
         // * * * * * * * * * * * * * * 
         // Do something in the meantime
         // * * * * * * * * * * * * * *
-        
-        if(millis()%2000 == 0) {
+
+        /*
+        //if(millis()%500 == 0) {
 
          LR = int(random(0, 256));
          LG = int(random(0, 256));
@@ -305,7 +315,10 @@ byte nextXB() {
          preRG = RG;
          preRB = RB;
             
-        }
+            delay(500);
+            
+        //}
+         */
         
 	}
 }
@@ -338,7 +351,7 @@ byte nextROBOBRRD() {
 	
 }
 
-
+/*
 void fade ( int startL_R,  int startL_G,  int startL_B, 
            int finishL_R, int finishL_G, int finishL_B,
            int startR_R,  int startR_G,  int startR_B,
@@ -450,6 +463,7 @@ void fade ( int startL_R,  int startL_G,  int startL_B,
     }
     
 }
+ */
 
 void playTone(int tone, int duration) {
 	
