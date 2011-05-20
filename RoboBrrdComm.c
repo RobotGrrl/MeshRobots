@@ -93,12 +93,13 @@ int preLR(0), preLG(0), preLB(0), preRR(0), preRG(0), preRB(0);
 int LR, LG, LB, RR, RG, RB;
 
 // Speaker
-int spkr(6);
+int spkr(3);
 int length = 5; // the number of notes
 char notes[] = "d d  "; // a space represents a rest
 int tempo = 300;
 char music[] = { 'c', 'd', 'e', 'f', 'g', 'a', 'b', 'C', 'D', 'E', 'F' };
 
+int flagPin = 11;
 
 // Initialize
 void setup() {
@@ -113,7 +114,9 @@ void setup() {
     
 	attachInterrupt(interruptIncoming, trigger, RISING);
     digitalWrite(2, LOW);
-	
+    
+    pinMode(flagPin, INPUT);
+    
 	/* Call Tlc.init() to setup the tlc.
      You can optionally pass an initial PWM value (0 - 4095) for all channels.*/
     pinMode(spkr, OUTPUT);
@@ -252,6 +255,14 @@ byte nextXB() {
             // --- P
             if(msg[0] == 'P') {
                 Serial << "P";
+                
+                if(digitalRead(flagPin) == HIGH) {
+                    digitalWrite(LED, HIGH);
+                    delay(100);
+                    randomChirp();
+                    digitalWrite(LED, LOW);
+                }
+                
             }
             
             // --- L
@@ -321,6 +332,12 @@ byte nextXB() {
          */
         
 	}
+}
+
+void randomChirp() {
+    for(int i=0; i<10; i++) {
+        playTone((int)random(100,800), (int)random(50, 200));
+    }
 }
 
 byte nextROBOBRRD() {

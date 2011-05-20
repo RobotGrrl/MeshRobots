@@ -58,6 +58,8 @@ int pirCount = 1;
 int thresh = 200;
 int ldrStable = 0;
 int currentDir = 1;
+int ldrLprev = 0;
+int ldrRprev = 0;
 
 // All the pins
 int interruptIncomming = 0; // on pin 2
@@ -72,23 +74,15 @@ volatile boolean triggerFlag = false;
 
 int pos = 0;
 
+int flagPin = 24;
+
+int spkr = 26;
+
 // Initialize
 void setup() {
     
-    // Servos
-    leftwing.attach(leftwingPin);
-    rightwing.attach(rightwingPin);
-    leftright.attach(leftrightPin);
-    updown.attach(updownPin);
-    
-    // Home positions
-    leftwing.write(0);
-    rightwing.write(30);
-    //leftright.write(90);
-    updown.write(100);
-    
 	// Communication
-	//Serial.begin(9600);
+	Serial.begin(9600);
     Serial1.begin(9600);
 	
 	// Interrupts
@@ -98,22 +92,50 @@ void setup() {
 	attachInterrupt(interruptIncomming, trigger, RISING);
 	digitalWrite(2, LOW);
     
+    pinMode(flagPin, OUTPUT);
+    digitalWrite(flagPin, LOW);
+    
+    pinMode(spkr, OUTPUT);
+    
+    // LEDs
+    pinMode(redR, OUTPUT);
+    pinMode(greenR, OUTPUT);
+    pinMode(blueR, OUTPUT);
+    pinMode(redL, OUTPUT);
+    pinMode(greenL, OUTPUT);
+    pinMode(blueL, OUTPUT);
+    
     // Sensors
-//    pinMode(pir, INPUT);
-//    pinMode(tiltFB, INPUT);
-//    pinMode(tiltLR, INPUT);
-//    pinMode(ldrL, INPUT);
-//    pinMode(ldrR, INPUT);
+    pinMode(pir, INPUT);
+    pinMode(tiltFB, INPUT);
+    pinMode(tiltLR, INPUT);
+    pinMode(ldrL, INPUT);
+    pinMode(ldrR, INPUT);
+    
+    // Servos
+    leftwing.attach(leftwingPin);
+    rightwing.attach(rightwingPin);
+    leftright.attach(leftrightPin);
+    updown.attach(updownPin);
+    
+    // Home positions
+    leftwing.write(90);
+    rightwing.write(20);
+    leftright.write(90);
+    updown.write(100);
     
     for(int i=0; i<5; i++) {
-        moveRightWing(!alternate);
+        moveRightWing(alternate);
         moveLeftWing(!alternate);
         alternate = !alternate;
         delay(500);
     }
     
-    rightwing.write(30);
+    rightwing.write(20);
+    leftwing.write(90);
 
+    
+    randomChirp();
 	
 }
 
@@ -155,13 +177,6 @@ void loop() {
      
     
 	if(triggerFlag) {
-		
-        boolean alt = false;
-        for(int i=0; i<5; i++) {
-            moveRightWing(alt);
-            alt = !alt;
-            delay(50);
-        }
 
         
 		if(debug) Serial << "Trigger flag is set, sending outgoing interrupt" << endl;
@@ -204,12 +219,51 @@ void loop() {
     
     //periodicSend();
     
-    //pirBehaviour(analogRead(pir));
-    ldrBehaviour(analogRead(ldrL), analogRead(ldrR));
+    //while(analogRead(pir) < 500) {
     
+    updateLights(true);
+    
+    int randomBehaviour = 7;//(int)random(0, 7);
+    
+    switch(randomBehaviour) {
+        case 0:
+            passiveWingsBehaviour();
+            break;
+        case 1:
+            passiveLeftWingWave();
+            break;
+        case 2:
+            passiveRightWingWave();
+            break;
+        case 3:
+            passiveDownLook();
+            break;
+        case 4:
+            passiveUpLook();
+            break;
+        case 5:
+            passiveLeftLook();
+            break;
+        case 6:
+            passiveRightLook();
+            break;
+        default:
+            break;
+    }
+        
+    //}
+    
+    Serial << "L: " << analogRead(ldrL) << " R: " << analogRead(ldrR) << endl;
+    
+    //pirBehaviour(analogRead(pir));
+    //ldrBehaviour(analogRead(ldrL), analogRead(ldrR));
+    peekABooBehaviour(analogRead(ldrL), analogRead(ldrR));
+    
+    /*
     if(millis()%500 == 0) {
     updateLights(true);
 	}
+     */
         
 }
 
@@ -310,13 +364,140 @@ void sensorReadings() {
     }
 }
 
+void passiveWingsBehaviour() {
+    
+    int curL = leftwing.read();
+    int curR = rightwing.read();
+    
+    for(int i=0; i<5; i++) {
+        leftwing.write(leftwing.read()+1);
+        rightwing.write(rightwing.read()+1);
+        delay(50);
+    }
+    
+    for(int i=0; i<5; i++) {
+        leftwing.write(leftwing.read()-1);
+        rightwing.write(rightwing.read()-1);
+        delay(50);
+    }
+    
+    leftwing.write(curL);
+    rightwing.write(curR);
+    
+}
+
+void passiveLeftWingWave() {
+    
+    int curL = leftwing.read();
+    
+    for(int j=0; j<2; j++) {
+        for(int i=60; i<80; i++) {
+            leftwing.write(i);
+            delay(20);
+        }
+        for(int i=80; i>60; i--) {
+            leftwing.write(i);
+            delay(20);
+        }
+    }
+        
+    //leftwing.write(curL);
+    
+}
+
+void passiveRightWingWave() {
+    
+    int curR = rightwing.read();
+    
+    for(int j=0; j<2; j++) {
+        for(int i=0; i<20; i++) {
+            rightwing.write(i);
+            delay(20);
+        }
+        for(int i=20; i>0; i--) {
+            rightwing.write(i);
+            delay(20);
+        }
+    }
+    
+    //rightwing.write(curR);
+    
+}
+
+void passiveDownLook() {
+    
+    int curU = updown.read();
+    
+    if(curU >= 100) return; 
+    
+    for(int i=curU; i<100; i++) {
+        updown.write(i);
+        delay(30);
+    }
+    
+    /*
+    for(int i=110; i>curU; i--) {
+        updown.write(i);
+        delay(5);
+    }
+     */
+    
+}
+
+void passiveUpLook() {
+    
+    int curU = updown.read();
+    
+    if(curU <= 90) return;
+    
+    for(int i=curU; i>90; i--) {
+        updown.write(i);
+        delay(30);
+    }
+    
+    /*
+    for(int i=90; i<curU; i++) {
+        updown.write(i);
+        delay(10);
+    }
+     */
+    
+}
+
+void passiveLeftLook() {
+    
+    int curL = leftright.read();
+    
+    if(curL < 70) return;
+    
+    for(int i=curL; i>70; i--) {
+        leftright.write(i);
+        delay(10);
+    }
+    
+}
+
+void passiveRightLook() {
+    
+    int curR = leftright.read();
+    
+    if(curR > 110) return;
+    
+    for(int i=curR; i<110; i++) {
+        leftright.write(i);
+        delay(10);
+    }
+    
+}
 
 void ldrBehaviour(int ldrL, int ldrR) {
     
     if(ldrL < (ldrR+thresh) && ldrL > (ldrR-thresh)) {
+        
         // neutral
         
         if(ldrStable >= 5000) {
+            moveUpDown(100, 50);
             goMiddle();
             ldrStable = 0;
         }
@@ -325,27 +506,138 @@ void ldrBehaviour(int ldrL, int ldrR) {
         
     } else if(ldrL > (ldrR+thresh)) {
         // left (but go to the right)
+        updown.write(80);
         if(currentDir != 1) goMiddle(); 
         sendToComm('R');
+        moveUpDown(80, 50);
         goRight();
         for(int i=0; i<6; i++) {
             moveRightWing(!alternate);
             alternate = !alternate;
             delay(80);
         }
+        rightwing.write(20);
         ldrStable = 0;
     } else if(ldrL < (ldrR-thresh)) {
         // right
         if(currentDir != 1) goMiddle(); 
         sendToComm('L');
+        moveUpDown(80, 50);
         goLeft();
         for(int i=0; i<6; i++) {
             moveLeftWing(!alternate);
             alternate = !alternate;
             delay(80);
         }
+        leftwing.write(90);
         ldrStable = 0;
+        
     }
+    
+}
+
+void peekABooBehaviour(int ldrL, int ldrR) {
+    
+    if(ldrL <= (ldrLprev-50) || ldrR <= (ldrRprev-50)) {
+        
+        // dim the lights
+        L1R = 255;//int(random(50, 255));
+        L1G = 255;//int(random(50, 255));
+        L1B = 255;//int(random(50, 255));
+        R1R = L1R;//int(random(50, 255));
+        R1G = L1G;//int(random(50, 255));
+        R1B = L1B;//int(random(50, 255));
+        L2R = int(random(50, 255));
+        L2G = int(random(50, 255));
+        L2B = int(random(50, 255));
+        R2R = int(random(50, 255));
+        R2G = int(random(50, 255));
+        R2B = int(random(50, 255));
+
+        fade( preL1R,    preL1G,      preL1B,  // L1 Start
+             L1R,       L1G,         L1B,     // L1 Finish
+             preR1R,    preR1G,      preR1B,  // R1 Start
+             R1R,       R1G,         R1B,     // R1 Finish
+             preL2R,    preL2G,      preL2B,  // L2 Start
+             L2R,       L2G,         L2B,     // L2 Finish
+             preR2R,    preR2G,      preR2B,  // R2 Start
+             R2R,       R2G,         R2B,     // R2 Finish
+             1);
+    
+        preL1R = L1R;
+        preL1G = L1G;
+        preL1B = L1B;
+        preR1R = R1R;
+        preR1G = R1G;
+        preR1B = R1B;
+        preL2R = L2R;
+        preL2G = L2G;
+        preL2B = L2B;
+        preR2R = R2R;
+        preR2G = R2G;
+        preR2B = R2B;
+        
+        
+        // wiggle the wings
+        for(int i=0; i<6; i++) {
+            moveLeftWing(alternate);
+            moveRightWing(!alternate);
+            alternate = !alternate;
+            delay(150);
+        }
+        
+        // bright lights
+        L1R = 0;//int(random(50, 255));
+        L1G = 0;//int(random(50, 255));
+        L1B = 0;//int(random(50, 255));
+        R1R = L1R;//int(random(50, 255));
+        R1G = L1G;//int(random(50, 255));
+        R1B = L1B;//int(random(50, 255));
+        L2R = int(random(50, 255));
+        L2G = int(random(50, 255));
+        L2B = int(random(50, 255));
+        R2R = int(random(50, 255));
+        R2G = int(random(50, 255));
+        R2B = int(random(50, 255));
+        
+        fade( preL1R,    preL1G,      preL1B,  // L1 Start
+             L1R,       L1G,         L1B,     // L1 Finish
+             preR1R,    preR1G,      preR1B,  // R1 Start
+             R1R,       R1G,         R1B,     // R1 Finish
+             preL2R,    preL2G,      preL2B,  // L2 Start
+             L2R,       L2G,         L2B,     // L2 Finish
+             preR2R,    preR2G,      preR2B,  // R2 Start
+             R2R,       R2G,         R2B,     // R2 Finish
+             1);
+        
+        preL1R = L1R;
+        preL1G = L1G;
+        preL1B = L1B;
+        preR1R = R1R;
+        preR1G = R1G;
+        preR1B = R1B;
+        preL2R = L2R;
+        preL2G = L2G;
+        preL2B = L2B;
+        preR2R = R2R;
+        preR2G = R2G;
+        preR2B = R2B;
+        
+        // play music
+        for(int i=0; i<3; i++) {
+            playTone((int)random(100,200), (int)random(50, 200));
+            delay(50);
+        }
+            
+        // home
+        updateLights(true);
+        rightwing.write(20);
+        leftwing.write(90);
+        
+    }
+    
+    ldrLprev = ldrL;
+    ldrRprev = ldrR;
     
 }
 
@@ -356,10 +648,16 @@ void pirBehaviour(int pirR) {
         sendToComm('P');
         
         if(pirCount % 5 == 0) {
+            
+            //digitalWrite(flagPin, HIGH);
             openMouth();
-            delay(1500);
+            delay(100);
+            randomChirp();
+            //delay(1500);
             closeMouth();
             delay(100);
+            //digitalWrite(flagPin, LOW);
+            
         } else {
             
             for(int i=0; i<6; i++) {
@@ -368,6 +666,8 @@ void pirBehaviour(int pirR) {
             alternate = !alternate;
             delay(150);
             }
+            rightwing.write(20);
+            leftwing.write(90);
             
         }
     
@@ -659,5 +959,23 @@ void fade ( int startL1_R,  int startL1_G,  int startL1_B,
         
     }
     
+}
+
+void randomChirp() {
+    for(int i=0; i<10; i++) {
+        playTone((int)random(100,800), (int)random(50, 200));
+    }
+}
+
+
+void playTone(int tone, int duration) {
+	
+	for (long i = 0; i < duration * 1000L; i += tone * 2) {
+		digitalWrite(spkr, HIGH);
+		delayMicroseconds(tone);
+		digitalWrite(spkr, LOW);
+		delayMicroseconds(tone);
+	}
+	
 }
 
